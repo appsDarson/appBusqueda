@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buscar Modelo</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .no-result {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Buscar Modelo</h1>
+    <input type="text" id="modelo" placeholder="Ingresa el modelo">
+    <button onclick="buscar()">Buscar</button>
+
+    <!-- Tabla para mostrar resultados -->
+    <table id="resultado-table" style="display: none;">
+        <thead>
+            <tr>
+                <th>MODELO</th>
+                <th>NOMBRE CORTO</th>
+                <th>PASILLO</th>
+                <th>BODEGA</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div id="no-result" class="no-result" style="display: none;">Modelo no encontrado</div>
+
+    <script>
+        async function buscar() {
+            const modelo = document.getElementById('modelo').value;
+            const response = await fetch(`/buscar?modelo=${modelo}`);
+            const data = await response.json();
+
+            const table = document.getElementById('resultado-table');
+            const tbody = table.querySelector('tbody');
+            const noResult = document.getElementById('no-result');
+
+            // Limpiar la tabla y el mensaje
+            tbody.innerHTML = '';
+            noResult.style.display = 'none';
+            table.style.display = 'none';
+
+            if (data.length > 0) {
+                // Mostrar los resultados en la tabla
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.MODELO}</td>
+                        <td>${row['NOMBRE CORTO']}</td>
+                        <td>${row.PASILLO}</td>
+                        <td>${row.BODEGA}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                table.style.display = 'table'; // Mostrar la tabla
+            } else {
+                // Mostrar mensaje de "No encontrado"
+                noResult.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

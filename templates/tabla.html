@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tabla Completa</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tabla Completa</h1>
+    <input type="text" id="filtro" placeholder="Filtrar por modelo o nombre corto">
+    <table id="tabla" border="1">
+        <thead>
+            <tr>
+                <th>MODELO</th>
+                <th>NOMBRE CORTO</th>
+                <th>PASILLO</th>
+                <th>BODEGA</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function cargarTabla() {
+            const response = await fetch('/tabla');
+            const data = await response.json();
+            const tbody = document.querySelector('#tabla tbody');
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td>${row.MODELO}</td>
+                    <td>${row['NOMBRE CORTO']}</td>
+                    <td>${row.PASILLO}</td>
+                    <td>${row.BODEGA}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('filtro').addEventListener('input', (e) => {
+            const filtro = e.target.value.toLowerCase();
+            const filas = document.querySelectorAll('#tabla tbody tr');
+            filas.forEach(fila => {
+                const textoFila = fila.innerText.toLowerCase();
+                fila.style.display = textoFila.includes(filtro) ? '' : 'none';
+            });
+        });
+
+        cargarTabla();
+    </script>
+</body>
+</html>
