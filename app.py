@@ -38,6 +38,7 @@ def index():
 @app.route('/tabla_completa')
 def tabla_completa():
     return render_template('tabla.html')
-
+    
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))  # Usar el puerto de Render o 5000 por defecto
+    app.run(host='0.0.0.0', port=port)
