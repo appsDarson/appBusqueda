@@ -4,20 +4,18 @@ from flask import Flask, request, jsonify, render_template
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Inicializar la aplicación Flask
 app = Flask(__name__)
 
 # Cargar credenciales desde variables de entorno
-try:
-    creds_json = os.getenv('GOOGLE_CREDENTIALS')  # Obtener la variable de entorno
-    if not creds_json:
-        raise ValueError("La variable de entorno GOOGLE_CREDENTIALS no está configurada.")
-    
-    creds_dict = json.loads(creds_json)  # Convertir el JSON de texto a un diccionario
-    creds = Credentials.from_service_account_info(creds_dict, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
-    client = gspread.authorize(creds)
+creds_json = os.getenv('GOOGLE_CREDENTIALS')  # Obtener la variable de entorno
+if not creds_json:
+    raise ValueError("La variable de entorno GOOGLE_CREDENTIALS no está configurada.")
 
-    # Abre la hoja de cálculo
+creds_dict = json.loads(creds_json)  # Convertir el JSON de texto a un diccionario
+creds = Credentials.from_service_account_info(creds_dict, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+client = gspread.authorize(creds)
+
+# Abre la hoja de cálculo
     sheet = client.open("Copia de Mapa Picking").sheet1
 except Exception as e:
     print(f"Error al cargar las credenciales o abrir la hoja de cálculo: {e}")
