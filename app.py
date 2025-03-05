@@ -7,39 +7,52 @@ from google.oauth2.service_account import Credentials
 # Inicializar la aplicación Flask
 app = Flask(__name__)
 
-# Configurar las credenciales de Google Sheets
-def get_google_sheets_client():
-    # Obtener las credenciales desde la variable de entorno
-    creds_json = os.getenv('GOOGLE_CREDENTIALS')
+# Cargar credenciales desde variables de entorno
+try:
+    creds_json = os.getenv('GOOGLE_CREDENTIALS')  # Obtener la variable de entorno
     if not creds_json:
         raise ValueError("La variable de entorno GOOGLE_CREDENTIALS no está configurada.")
     
-    # Convertir el JSON de texto a un diccionario
-    creds_dict = json.loads(creds_json)
-    
-    # Configurar el alcance y autorizar el cliente
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+    creds_dict = json.loads(creds_json)  # Convertir el JSON de texto a un diccionario
+    creds = Credentials.from_service_account_info(creds_dict, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
     client = gspread.authorize(creds)
-    
-    return client
-    
-# Abre la hoja de cálculo
-sheet = client.open("Copia de Mapa Picking").sheet1
+
+    # Abre la hoja de cálculo
+    sheet = client.open("Copia de Mapa Picking").sheet1
+except Exception as e:
+    print(f"Error al cargar las credenciales o abrir la hoja de cálculo: {e}")
+    sheet = None  # Si hay un error, sheet será None
 
 # Ruta para buscar un modelo
 @app.route('/buscar', methods=['GET'])
 def buscar():
-    modelo = request.args.get('modelo')
-    datos = sheet.get_all_records()
-    resultado = [fila for fila in datos if fila['MODELO'] == modelo]
-    return jsonify(resultado)
+    try:
+        modelo = request.args.get('modelo', '').lower()  # Convertir a minúsculas
+        if not modelo:
+            return jsonify({"error": "Por favor, proporciona un modelo para buscar."}), 400
+        
+        if not sheet:
+            return jsonify({"error": "Error al acceder a la hoja de cálculo."}), 500
+        
+        datos = sheet.get_all_records()
+        resultado = [fila for fila in datos if modelo in fila['MODELO'].lower()]
+        return jsonify(resultado)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Ruta para obtener todos los datos
 @app.route('/tabla', methods=['GET'])
 def tabla():
-    datos = sheet.get_all_records()
-    return jsonify(datos)
+    try:
+        if not sheet:
+            return jsonify({"error": "Error al acceder a la hoja de cálculo."}), 500
+        
+        datos = sheet.get_all_records()
+        return jsonify(datos)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Ruta para la página principal (búsqueda)
 @app.route('/')
@@ -50,7 +63,8 @@ def index():
 @app.route('/tabla_completa')
 def tabla_completa():
     return render_template('tabla.html')
-    
+
+# Configurar el puerto para Render
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Usar el puerto de Render o 5000 por defecto
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=False)  # Desactivar debug en producción
